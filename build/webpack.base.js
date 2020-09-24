@@ -1,6 +1,5 @@
 const webpack = require('webpack');
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin"); // TODO: 如果启用SSR，不使用该插件
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const Webpackbar = require('webpackbar');
@@ -25,7 +24,6 @@ const webpackBaseConfig = {
 
   // 插件
   plugins: [
-    new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       title: 'Testing',
       template: resolve('src/index.html'), //模板路径
@@ -35,9 +33,16 @@ const webpackBaseConfig = {
       },
       hash: true
     }),
+    createHappyPlugin('happy-babel', [{
+      loader: 'babel-loader',
+      options: {
+        babelrc: true,
+        cacheDirectory: true, // 启用缓存
+      },
+    }]),
     new VueLoaderPlugin(),
     new MiniCssExtractPlugin({
-      filename: 'css/main.[hash:8].min.css' //css抽离输出路径
+      filename: 'css/[name].[hash:8].min.css' //css抽离输出路径
     }),
     new Webpackbar(),
     new webpack.HashedModuleIdsPlugin({})
@@ -45,7 +50,13 @@ const webpackBaseConfig = {
 
   // loader
   module: {
+    // 当前处理：ts--(ts-loader)-->js--(babel)-->js(es5)
+    // 其他处理：ts--(babel-typescript)-->js(es5)
     rules: [{
+      test: /\.js$/,
+      loader: 'happypack/loader?id=happy-babel',
+      include: [resolve('src'), resolve('node_modules/@tencent/bcd')],
+    }, {
       test: /\.vue$/,
       loader: 'vue-loader',
       include: [resolve('src')],
@@ -57,6 +68,7 @@ const webpackBaseConfig = {
       exclude: /node_modules/
     }, {
       test: /\.css$/,
+      include: [resolve('src')],
       use: [
         MiniCssExtractPlugin.loader,
         {
@@ -74,6 +86,8 @@ const webpackBaseConfig = {
       ]
     }, {
       test: /\.s[ac]ss$/,
+      exclude: /node_modules/,
+      include: [resolve('src')],
       use: [
         MiniCssExtractPlugin.loader,
         {
@@ -121,6 +135,10 @@ const webpackBaseConfig = {
   }
 };
 
+if (isProd) {
+  const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+  webpackBaseConfig.plugins.push(new CleanWebpackPlugin());
+}
 if (process.env.ANALYZE === '1') {
   const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
   webpackBaseConfig.plugins.push(new BundleAnalyzerPlugin());

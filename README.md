@@ -8,5 +8,4 @@ npm script
 - `npm run release:client`-服务端生产环境打包
 
 ## TODO
-- [ ] `webpack.prod.client.js`和`webpack.base.js`完善
-- [ ] 剩余模板目录填充
+- [ ] 服务端部分补充 

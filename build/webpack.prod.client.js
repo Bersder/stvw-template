@@ -16,7 +16,7 @@ const clientProdConfig = merge(webpackBaseConfig, {
   output: {
     path: resolve('public/cdn'),
     filename: '[name].min.js',
-    chunkFilename: '[name].min.js',
+    chunkFilename: '[name].min.[chunkhash:8].js?cors=1',
     publicPath: '' // TODO: 这里需要按需填写
   },
   plugins: [
